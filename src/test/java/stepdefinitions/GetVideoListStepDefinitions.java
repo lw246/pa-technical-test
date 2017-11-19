@@ -1,10 +1,13 @@
-import cucumber.api.PendingException;
+package stepdefinitions;
 import cucumber.api.java.en.*;
-import gherkin.lexer.He;
+import models.Video;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.junit.Assert;
+import general.*;
+import org.junit.Before;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,11 @@ public class GetVideoListStepDefinitions {
     private HttpResponse httpResponse;
     private Helpers helpers = new Helpers();
     private String songId;
+
+    @Before
+    public void ClearTestData() throws IOException {
+        helpers.ClearOutSongDatabase();
+    }
 
     @Given("^I have no videos in the database$")
     public void i_have_no_videos_in_the_database() throws Throwable {

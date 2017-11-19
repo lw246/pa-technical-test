@@ -1,4 +1,8 @@
+package general;
+
 import com.google.gson.reflect.TypeToken;
+
+import models.Video;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import com.google.gson.*;
@@ -6,6 +10,7 @@ import org.apache.http.entity.ContentType;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -14,7 +19,7 @@ import java.util.Scanner;
 public class Helpers {
     private String BaseUrl = "http://turing.niallbunting.com:3006/api";
 
-    void ClearOutSongDatabase() throws IOException {
+    public void ClearOutSongDatabase() throws IOException {
         List<Video> videos = GetVideoList();
 
         for (Video video : videos) {
@@ -45,6 +50,7 @@ public class Helpers {
         StringBuilder result = new StringBuilder("");
 
         ClassLoader classLoader = getClass().getClassLoader();
+
         File file = new File(classLoader.getResource(fileName).getFile());
 
         try (Scanner scanner = new Scanner(file)) {
@@ -84,21 +90,21 @@ public class Helpers {
         return stringBuilder.toString();
     }
 
-    ArrayList<Video> BuildVideoListFromHttpResponse(HttpResponse httpResponse) throws IOException {
+    public ArrayList<Video> BuildVideoListFromHttpResponse(HttpResponse httpResponse) throws IOException {
         InputStream content = httpResponse.getEntity().getContent();
         String httpBody = ConvertStreamToString(content);
         return CreateVideoListFromJsonArray(httpBody);
     }
 
     private ArrayList<Video> CreateVideoListFromJsonArray(String data) {
-        if (data == null || data.isEmpty()) return new ArrayList<Video>();
+        if (data == null || data.isEmpty()) return new ArrayList<>();
 
         Gson gson = new Gson();
         Type videoListType = new TypeToken<ArrayList<Video>>(){}.getType();
         return gson.fromJson(data, videoListType);
     }
 
-    Video BuildVideoObjectFromHTTPResponse(HttpResponse httpResponse) throws IOException {
+    public Video BuildVideoObjectFromHTTPResponse(HttpResponse httpResponse) throws IOException {
         InputStream content = httpResponse.getEntity().getContent();
         String httpBody = ConvertStreamToString(content);
         return MapJsonVideoObject(httpBody);
