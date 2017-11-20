@@ -11,12 +11,10 @@ import org.apache.http.entity.ContentType;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 
-public class Helpers {
+public class VideoHelpers {
     private String BaseUrl = "http://turing.niallbunting.com:3006/api";
 
     public void ClearOutSongDatabase() throws IOException {
@@ -67,9 +65,9 @@ public class Helpers {
         return result.toString();
     }
 
-    private String ConvertStreamToString(InputStream inputStream) {
+    public String ConvertStreamToString(InputStream inputStream) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder("");
 
         String line;
         try {
@@ -115,6 +113,19 @@ public class Helpers {
 
         Gson gson = new Gson();
         return gson.fromJson(data, Video.class);
+    }
+
+    public String GetVideoClassPropertyFromJsonProperty(String jsonProperty){
+        HashMap<String, String> jsonToClass = new HashMap<String, String>();
+
+        jsonToClass.put("_id", "Id");
+        jsonToClass.put("song", "Song");
+        jsonToClass.put("artist", "Artist");
+        jsonToClass.put("publishDate", "PublishDate");
+        jsonToClass.put("__v", "V");
+        jsonToClass.put("date_created", "DateCreated");
+
+        return jsonToClass.get(jsonProperty);
     }
 
 }

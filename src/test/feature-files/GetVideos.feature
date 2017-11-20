@@ -21,10 +21,13 @@ Feature: Get List of Songs
     Then A JSON Array should be returned with multiple results
     And The response code should be 200
 
-  Scenario: Get request passing song Id
-    Given  I'm using the API on url "http://turing.niallbunting.com:3006/api"
+  Scenario: The song JSON object contains the correct properties
+    Given I'm using the API on url "http://turing.niallbunting.com:3006/api"
     And I have multiple videos in the database
-    And I have acquired the Id for a song
-    When I make a GET request to "/video"/SongId
-    Then A single JSON object should be returned
-    And The Songs ID should match that which was passed in the request
+    When I make a GET request to "/video"
+    Then The "_id" property should be present in all the JSON objects returned
+    And The "song" property should be present in all the JSON objects returned
+    And The "artist" property should be present in all the JSON objects returned
+    And The "publishDate" property should be present in all the JSON objects returned
+    And The "__v" property should be present in all the JSON objects returned
+    And The "date_created" property should be present in all the JSON objects returned
