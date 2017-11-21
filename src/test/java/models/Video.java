@@ -6,20 +6,25 @@ import java.util.Date;
 
 public class Video {
     @SerializedName("_id")
-    public String Id;
+    public String _id;
 
     @SerializedName("artist")
-    public String Artist;
+    public String artist;
 
     @SerializedName("song")
-    public String Song;
+    public String song;
 
     @SerializedName("publishDate")
-    public Date PublishDate;
+    public String publishDate;
 
     @SerializedName("__v")
-    public Integer V;
+    public Integer __v;
 
     @SerializedName("date_created")
-    public Date DateCreated;
+    public String date_created;
+
+    public String getSong(){
+        return this.song;
+    }
 }
+

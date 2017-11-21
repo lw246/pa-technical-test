@@ -1,21 +1,39 @@
 package stepdefinitions;
+import cucumber.api.DataTable;
 import cucumber.api.PendingException;
-import cucumber.api.java.en.*;
+import cucumber.api.java.en.And;
+import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
+import general.VideoHelpers;
+import general.CustomMatchers;
 import models.Video;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Assert;
-import general.*;
 import org.junit.Before;
+import sun.font.TrueTypeFont;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
 
-public class GetVideoListStepDefinitions {
+public class VideoDefinitions {
 
     private String baseUrl;
     private HttpResponse httpResponse;
@@ -93,7 +111,7 @@ public class GetVideoListStepDefinitions {
                                                 .execute()
                                                 .returnResponse();
         ArrayList<Video> videos = videoHelpers.BuildVideoListFromHttpResponse(allSongsResponse);
-        songId = videos.get(0).Id;
+        songId = videos.get(0)._id;
     }
 
 
@@ -107,7 +125,7 @@ public class GetVideoListStepDefinitions {
     @And("^The Songs ID should match that which was passed in the request$")
     public void theSongsIDShouldMatchThatWhichWasPassedInTheRequest() throws Throwable {
         Video video = videoHelpers.BuildVideoObjectFromHTTPResponse(httpResponse);
-        Assert.assertEquals(songId, video.Id);
+        Assert.assertEquals(songId, video._id);
     }
 
     @Then("^A single JSON object should be returned$")
@@ -120,11 +138,10 @@ public class GetVideoListStepDefinitions {
     public void thePropertyShouldBePresentInTheJSONObjectsReturned(String propertyName) throws Throwable {
         ArrayList<Video> videos = videoHelpers.BuildVideoListFromHttpResponse(httpResponse);
 
-        String classProperty = videoHelpers.GetVideoClassPropertyFromJsonProperty(propertyName);
         // This is probably overly complicated, however I'm also using this as a learning experience as it's fun!
         for (Video video: videos){
             Class<?> c = video.getClass();
-            Field f = c.getDeclaredField(classProperty);
+            Field f = c.getDeclaredField(propertyName);
             f.setAccessible(true);
             Assert.assertNotNull(f.get(video));
         }
@@ -141,11 +158,76 @@ public class GetVideoListStepDefinitions {
     @And("^The \"([^\"]*)\" property should be present in the JSON object returned$")
     public void thePropertyShouldBePresentInTheJSONObjectReturned(String propertyName) throws Throwable {
         Video video = videoHelpers.BuildVideoObjectFromHTTPResponse(httpResponse);
-        String classProperty = videoHelpers.GetVideoClassPropertyFromJsonProperty(propertyName);
 
         Class<?> c = video.getClass();
-        Field f = c.getDeclaredField(classProperty);
+        Field f = c.getDeclaredField(propertyName);
         f.setAccessible(true);
         Assert.assertNotNull(f.get(video));
     }
+
+    @And("^The \"([^\"]*)\" property in the response should be \"([^\"]*)\"$")
+    public void thePropertyInTheResponseShouldBe(String property, String expectedValue) throws Throwable {
+
+    }
+
+    @When("^I make a POST to the \"([^\"]*)\" endpoint with a single song in the body$")
+    public void iMakeAPOSTToTheEndpointWithASingleSongInTheBody(String endpoint) throws Throwable {
+        String singleSong = "{\"artist\": \"Bon Iver\", \"song\": \"8 (circle)\", \"publishDate\": \"2016-01-01\"}";
+
+        httpResponse = Request.Post(baseUrl + endpoint)
+                .addHeader("Content-Type", "application/json")
+                .bodyString(singleSong, ContentType.APPLICATION_JSON)
+                .execute()
+                .returnResponse();
+    }
+
+
+    @When("^I make a POST to the \"([^\"]*)\" endpoint with the song details in the body$")
+    public void IMakeAPOSTToTheEndpointWithTheSongDetailsInTheBody(String endpoint, List<Video> video) throws Throwable {
+      String songs = videoHelpers.CreateVideoJsonFromClass(video);
+
+      httpResponse = Request.Post(baseUrl + endpoint)
+                .addHeader("Content-Type", "application/json")
+                .bodyString(songs, ContentType.APPLICATION_JSON)
+                .execute()
+                .returnResponse();
+    }
+
+    @And("^The returned JSON should contain a song with song property set to \"([^\"]*)\"$")
+    public void TheReturnedJSONShouldContainASongWithSongPropertySetTo(String songTitle) throws Throwable {
+        // TODO Investigate using assertThat as it sounds useful - Right now I can't get it to play
+
+        List<Video> videos = videoHelpers.BuildVideoListFromHttpResponse(httpResponse);
+
+        // TODO Query why v.song == songTitle doesn't work
+        boolean songInList = false;
+
+        for(Video v : videos) {
+            if (v.song.equals(songTitle)){
+                songInList = true;
+            }
+        }
+        Assert.assertTrue(songInList);
+    }
+
+    @After
+    public void RemoveTestData() throws IOException {
+        videoHelpers.ClearOutSongDatabase();
+    }
+
+    @When("^I make a POST to the \"([^\"]*)\" endpoint passing the \"([^\"]*)\" property as an \"([^\"]*)\"$")
+    public void IMakeAPOSTToTheEndpointPassingThePropertyAsAn(String endpoint, String property, String dataType,
+                                                                     Map<String, String> tableData) throws Throwable {
+        String song = tableData.get("Song");
+        String artist = tableData.get("Artist");
+        String publishDate = tableData.get("PublishDate");
+
+        String jsonBody = videoHelpers.CreateInvalidVideoJson(song, artist, publishDate, property, dataType);
+
+        httpResponse = Request.Post(baseUrl + endpoint)
+                            .addHeader("Content-Type", "application/json")
+                            .execute()
+                            .returnResponse();
+    }
+
 }
