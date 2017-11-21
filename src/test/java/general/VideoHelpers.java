@@ -15,9 +15,14 @@ import java.util.*;
 
 
 public class VideoHelpers {
-    private String BaseUrl = "http://turing.niallbunting.com:3006/api";
+    
+    private String BaseUrl;
+    
+    public VideoHelpers(String baseUrl) {
+        this.BaseUrl = baseUrl;
+    }
 
-    public void ClearOutSongDatabase() throws IOException {
+    public void ClearOutVideoDatabase() throws IOException {
         List<Video> videos = GetVideoList();
 
         for (Video video : videos) {
@@ -44,53 +49,10 @@ public class VideoHelpers {
         return CreateVideoListFromJsonArray(data);
     }
 
-    public String GetTestDataFromResource(String fileName) {
-        StringBuilder result = new StringBuilder("");
-
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        File file = new File(classLoader.getResource(fileName).getFile());
-
-        try (Scanner scanner = new Scanner(file)) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                result.append(line).append("\n");
-            }
-
-            scanner.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return result.toString();
-    }
-
-    public String ConvertStreamToString(InputStream inputStream) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        StringBuilder stringBuilder = new StringBuilder();
-
-        String line;
-        try {
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line)
-                             .append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return stringBuilder.toString();
-    }
-
     public ArrayList<Video> BuildVideoListFromHttpResponse(HttpResponse httpResponse) throws IOException {
+        CommonHelpers commonHelpers = new CommonHelpers();
         InputStream content = httpResponse.getEntity().getContent();
-        String httpBody = ConvertStreamToString(content);
+        String httpBody = commonHelpers.ConvertStreamToString(content);
         return CreateVideoListFromJsonArray(httpBody);
     }
 
@@ -103,8 +65,9 @@ public class VideoHelpers {
     }
 
     public Video BuildVideoObjectFromHTTPResponse(HttpResponse httpResponse) throws IOException {
+        CommonHelpers commonHelpers = new CommonHelpers();
         InputStream content = httpResponse.getEntity().getContent();
-        String httpBody = ConvertStreamToString(content);
+        String httpBody = commonHelpers.ConvertStreamToString(content);
         return MapJsonVideoObject(httpBody);
     }
 
