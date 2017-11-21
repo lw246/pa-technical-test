@@ -1,36 +1,24 @@
 package stepdefinitions;
-import cucumber.api.DataTable;
 import cucumber.api.PendingException;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import general.VideoHelpers;
-import general.CustomMatchers;
 import models.Video;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import sun.font.TrueTypeFont;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
 
 public class VideoDefinitions {
@@ -152,7 +140,6 @@ public class VideoDefinitions {
         InputStream content = httpResponse.getEntity().getContent();
         String httpBody = videoHelpers.ConvertStreamToString(content);
         Assert.assertEquals("", httpBody);
-
     }
 
     @And("^The \"([^\"]*)\" property should be present in the JSON object returned$")
@@ -230,4 +217,30 @@ public class VideoDefinitions {
                             .returnResponse();
     }
 
+    @And("^The response body should read \"([^\"]*)\"$")
+    public void TheResponseBodyShouldRead(String expectedBodyText) throws Throwable {
+        expectedBodyText += "\n";
+        InputStream content = httpResponse.getEntity().getContent();
+        String bodyText = videoHelpers.ConvertStreamToString(content);
+
+        Assert.assertEquals(expectedBodyText, bodyText);
+    }
+
+    @When("^I make a PATCH request to the \"([^\"]*)\"/SongId with the below data$")
+    public void IMakeAPATCHRequestToTheSongIdWithTheBelowData(String endpoint, List<Video> video) throws Throwable {
+        String jsonBody = videoHelpers.CreateVideoJsonFromClass(video);
+
+        httpResponse = Request.Patch(baseUrl + endpoint + "/" + songId)
+                              .addHeader("Content-Type", "application/json")
+                              .bodyString(jsonBody, ContentType.APPLICATION_JSON)
+                              .execute()
+                              .returnResponse();
+    }
+
+    @When("^I make a DELETE request to \"([^\"]*)\"/SongId$")
+    public void iMakeADELETERequestToSongId(String endpoint) throws Throwable {
+        httpResponse = Request.Delete(baseUrl + endpoint + "/" + songId)
+                              .execute()
+                              .returnResponse();
+    }
 }
