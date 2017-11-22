@@ -2,14 +2,15 @@ package general;
 
 import com.google.gson.reflect.TypeToken;
 
+import com.sun.media.sound.InvalidDataException;
 import models.Video;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import com.google.gson.*;
-import org.apache.http.entity.ContentType;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -17,13 +18,15 @@ import java.util.*;
 public class VideoHelpers {
     
     private String BaseUrl;
+    private CommonHelpers commonHelpers;
     
     public VideoHelpers(String baseUrl) {
         this.BaseUrl = baseUrl;
+        commonHelpers = new CommonHelpers();
     }
 
     public void ClearOutVideoDatabase() throws IOException {
-        List<Video> videos = GetVideoList();
+        List<Video> videos = GetVideoArrayFromApi();
 
         for (Video video : videos) {
             Request.Delete(BaseUrl + "/Video/" + video._id)
@@ -31,14 +34,7 @@ public class VideoHelpers {
         }
     }
 
-    public void AddTestData(String testData) throws IOException {
-        Request.Post("http://turing.niallbunting.com:3006/api/video/")
-                .addHeader("Content-Type", "application/json")
-                .bodyString(testData, ContentType.APPLICATION_JSON)
-                .execute();
-    }
-    
-    private ArrayList<Video> GetVideoList() throws IOException {
+    public ArrayList<Video> GetVideoArrayFromApi() throws IOException {
         String data;
 
         data = Request.Get(BaseUrl + "/Video/")
@@ -46,78 +42,64 @@ public class VideoHelpers {
                 .returnContent()
                 .asString();
 
-        return CreateVideoListFromJsonArray(data);
+        return MapHttpBodyStringToVideoArray(data);
     }
 
-    public ArrayList<Video> BuildVideoListFromHttpResponse(HttpResponse httpResponse) throws IOException {
-        CommonHelpers commonHelpers = new CommonHelpers();
+    public ArrayList<Video> BuildVideoArrayFromHttpResponse(HttpResponse httpResponse) throws IOException {
         InputStream content = httpResponse.getEntity().getContent();
         String httpBody = commonHelpers.ConvertStreamToString(content);
-        return CreateVideoListFromJsonArray(httpBody);
+        return MapHttpBodyStringToVideoArray(httpBody);
     }
 
-    private ArrayList<Video> CreateVideoListFromJsonArray(String data) {
-        if (data == null || data.isEmpty()) return new ArrayList<>();
+    private ArrayList<Video> MapHttpBodyStringToVideoArray(String data) throws InvalidDataException {
+        if (data == null || data.isEmpty()) {
+            throw new InvalidDataException("No Json data to map");
+        }
 
         Gson gson = new Gson();
         Type videoListType = new TypeToken<ArrayList<Video>>(){}.getType();
         return gson.fromJson(data, videoListType);
     }
 
-    public Video BuildVideoObjectFromHTTPResponse(HttpResponse httpResponse) throws IOException {
+    public Video BuildVideoFromHttpResponse(HttpResponse httpResponse) throws IOException {
         CommonHelpers commonHelpers = new CommonHelpers();
         InputStream content = httpResponse.getEntity().getContent();
         String httpBody = commonHelpers.ConvertStreamToString(content);
-        return MapJsonVideoObject(httpBody);
+        return MapHttpBodyToVideo(httpBody);
     }
 
-    private Video MapJsonVideoObject(String data) {
-        if (data == null || data.isEmpty()) return null;
+    private Video MapHttpBodyToVideo(String data) throws InvalidDataException {
+        if (data == null || data.isEmpty()) {
+            throw new InvalidDataException("No JSON to map");
+        }
 
         Gson gson = new Gson();
         return gson.fromJson(data, Video.class);
     }
 
-    public String CreateVideoJsonFromClass(List<Video> videos){
+    public String CreateJsonFromVideoArray(List<Video> videos){
         Gson gson = new Gson();
         return gson.toJson(videos);
     }
 
-    public String CreateVideoJsonFromClass(Video video){
-        Gson gson = new Gson();
-        return gson.toJson(video);
-    }
-
-    /**
-     * Builds an invalid Video JSON POST object
-     * Current only supports passing integers
-     * @param song Song title for the video
-     * @param artist Artist for the video
-     * @param publishDate Publish date for the Video
-     * @param property The property to pass as an invalid data type
-     * @param dataType The data type to pass as
-     * @return A Json string for POST
-     */
-    public String CreateInvalidVideoJson(String song, String artist, String publishDate, String property, String dataType) {
-
+    public String CreateInvalidVideoJson(String song, String artist, String publishDate, String property) {
         if (!property.equals("song")
                 && !property.equals("artist")
-                && !property.equals("publishDate")
-                || !dataType.equals("integer")) {
+                && !property.equals("publishDate")) {
             throw new NotImplementedException();
         }
 
-        if (property.equals("song") && dataType.equals("integer")) {
+        if (property.equals("song")) {
             artist = "\"" + artist + "\"";
             publishDate = "\"" + publishDate + "\"";
         }
 
-        if (property.equals("artist") && dataType.equals("integer")) {
+        if (property.equals("artist")) {
             song = "\"" + song + "\"";
             publishDate = "\"" + publishDate + "\"";
         }
 
-        if (property.equals("publishDate") && dataType.equals("integer")) {
+        if (property.equals("publishDate")) {
             artist = "\"" + artist + "\"";
             song = "\"" + song + "\"";
         }
@@ -125,6 +107,21 @@ public class VideoHelpers {
         return "{\"song\": " + song + "," +
                 "\"artist\": " + artist + "," +
                 "\"publishDate\": " + publishDate;
+    }
+
+    public boolean PropertyInVideo(String propertyName, Video video) throws NoSuchFieldException, IllegalAccessException {
+        try{
+            Class<?> c = video.getClass();
+            Field f = c.getDeclaredField(propertyName);
+            f.setAccessible(true);
+            if (f.get(video) != null)
+            {
+                return true;
+            };
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return false;
+        }
+        return false;
     }
 }
 

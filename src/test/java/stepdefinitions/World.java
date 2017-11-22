@@ -6,4 +6,5 @@ public class World {
     String baseUrl;
     HttpResponse httpResponse;
     String songId;
+    String playlistId;
 }

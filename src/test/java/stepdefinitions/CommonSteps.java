@@ -1,13 +1,16 @@
 package stepdefinitions;
 
-import cucumber.api.java.en.And;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.When;
+import cucumber.api.PendingException;
+import cucumber.api.java.Before;
+import cucumber.api.java.en.*;
 import general.CommonHelpers;
+import general.PlaylistHelpers;
+import general.VideoHelpers;
 import org.apache.http.client.fluent.Request;
-import org.junit.Assert;
 
+import java.io.IOException;
 import java.io.InputStream;
+import static org.junit.Assert.*;
 
 public class CommonSteps {
 
@@ -15,12 +18,11 @@ public class CommonSteps {
 
     public CommonSteps(World world) {
         this.world = world;
-
     }
 
     @When("^I make a GET request to \"([^\"]*)\"$")
-    public void i_make_a_GET_request_to(String endpoint) throws Throwable {
-        world.httpResponse = Request.Get(world.baseUrl + endpoint)
+    public void i_make_a_GET_request_to(String method) throws Throwable {
+        world.httpResponse = Request.Get(world.baseUrl + method)
                 .execute()
                 .returnResponse();
     }
@@ -38,7 +40,7 @@ public class CommonSteps {
         CommonHelpers commonHelpers = new CommonHelpers();
         String bodyText = commonHelpers.ConvertStreamToString(content);
 
-        Assert.assertEquals(expectedBodyText, bodyText);
+        assertEquals(expectedBodyText, bodyText);
     }
 
     @And("^The response body should be empty$")
@@ -47,6 +49,24 @@ public class CommonSteps {
 
         CommonHelpers commonHelpers = new CommonHelpers();
         String httpBody = commonHelpers.ConvertStreamToString(content);
-        Assert.assertEquals("", httpBody);
+        assertEquals("", httpBody);
+    }
+
+    @Then("^The response code should be (\\d+)$")
+    public void the_response_code_should_be(int expectedResponseCode) throws Throwable {
+        int statusCode = world.httpResponse.getStatusLine().getStatusCode();
+        assertEquals(expectedResponseCode , statusCode);
+    }
+
+    @And("^The response should have no content$")
+    public void theResponseShouldHaveNoContent() throws Throwable {
+        assertEquals(world.httpResponse.getStatusLine().getReasonPhrase(), "No Content");
+    }
+
+    @When("^I make a DELETE request to \"([^\"]*)\"$")
+    public void iMakeADELETERequestTo(String method) throws Throwable {
+        world.httpResponse = Request.Delete(world.baseUrl + method)
+                .execute()
+                .returnResponse();
     }
 }

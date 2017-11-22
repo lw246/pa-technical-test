@@ -1,7 +1,7 @@
 package general;
 
-import cucumber.api.java.en.And;
-import org.junit.Assert;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
 
 import java.io.*;
 import java.util.Scanner;
@@ -10,7 +10,7 @@ public class CommonHelpers {
 
     public String ConvertStreamToString(InputStream inputStream) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder("");
 
         String line;
         try {
@@ -27,7 +27,6 @@ public class CommonHelpers {
                 e.printStackTrace();
             }
         }
-
         return stringBuilder.toString();
     }
 
@@ -36,7 +35,12 @@ public class CommonHelpers {
 
         ClassLoader classLoader = getClass().getClassLoader();
 
-        File file = new File(classLoader.getResource(fileName).getFile());
+        File file;
+        try {
+            file = new File(classLoader.getResource(fileName).getFile());
+        } catch (NullPointerException e) {
+            throw new NullPointerException(String.format("Invalid filename %s", fileName));
+        }
 
         try (Scanner scanner = new Scanner(file)) {
             while (scanner.hasNextLine()) {
@@ -50,6 +54,13 @@ public class CommonHelpers {
         }
 
         return result.toString();
+    }
+
+    public void AddTestData(String url, String testData) throws IOException {
+        Request.Post(url)
+                .addHeader("Content-Type", "application/json")
+                .bodyString(testData, ContentType.APPLICATION_JSON)
+                .execute();
     }
 
 }

@@ -23,8 +23,6 @@ public class Video {
     @SerializedName("date_created")
     public String date_created;
 
-    public String getSong(){
-        return this.song;
-    }
+    public String hidden;
 }
 
