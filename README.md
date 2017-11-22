@@ -13,6 +13,7 @@ Current issues I have with this project:
 - I don't believe I'm currently following Java naming conventions, need to read up on these and refactor as appropriate
 - Assertion on the PATCH video body text. The body has \n in the response, however I can't get assertEquals to account for this.
 Added line below to work around this (not all that happy with this approach
+    
     expectedBodyText += "\n";
 
 
