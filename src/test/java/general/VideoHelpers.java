@@ -1,88 +1,48 @@
 package general;
 
 import com.google.gson.reflect.TypeToken;
-
-import com.sun.media.sound.InvalidDataException;
-import models.Video;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
 import com.google.gson.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
+import com.sun.media.sound.InvalidDataException;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
-
+import models.Video;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Request;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class VideoHelpers {
     
     private String BaseUrl;
     private CommonHelpers commonHelpers;
-    
+
     public VideoHelpers(String baseUrl) {
         this.BaseUrl = baseUrl;
         commonHelpers = new CommonHelpers();
     }
 
-    public void ClearOutVideoDatabase() throws IOException {
-        List<Video> videos = GetVideoArrayFromApi();
-
-        for (Video video : videos) {
-            Request.Delete(BaseUrl + "/Video/" + video._id)
-            .execute();
+    public boolean propertyInVideo(String propertyName, Video video) throws NoSuchFieldException, IllegalAccessException {
+        try{
+            Class<?> c = video.getClass();
+            Field f = c.getDeclaredField(propertyName);
+            f.setAccessible(true);
+            if (f.get(video) != null)
+            {
+                return true;
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return false;
         }
+        return false;
     }
 
-    public ArrayList<Video> GetVideoArrayFromApi() throws IOException {
-        String data;
-
-        data = Request.Get(BaseUrl + "/Video/")
-                .execute()
-                .returnContent()
-                .asString();
-
-        return MapHttpBodyStringToVideoArray(data);
-    }
-
-    public ArrayList<Video> BuildVideoArrayFromHttpResponse(HttpResponse httpResponse) throws IOException {
-        InputStream content = httpResponse.getEntity().getContent();
-        String httpBody = commonHelpers.ConvertStreamToString(content);
-        return MapHttpBodyStringToVideoArray(httpBody);
-    }
-
-    private ArrayList<Video> MapHttpBodyStringToVideoArray(String data) throws InvalidDataException {
-        if (data == null || data.isEmpty()) {
-            throw new InvalidDataException("No Json data to map");
-        }
-
-        Gson gson = new Gson();
-        Type videoListType = new TypeToken<ArrayList<Video>>(){}.getType();
-        return gson.fromJson(data, videoListType);
-    }
-
-    public Video BuildVideoFromHttpResponse(HttpResponse httpResponse) throws IOException {
-        CommonHelpers commonHelpers = new CommonHelpers();
-        InputStream content = httpResponse.getEntity().getContent();
-        String httpBody = commonHelpers.ConvertStreamToString(content);
-        return MapHttpBodyToVideo(httpBody);
-    }
-
-    private Video MapHttpBodyToVideo(String data) throws InvalidDataException {
-        if (data == null || data.isEmpty()) {
-            throw new InvalidDataException("No JSON to map");
-        }
-
-        Gson gson = new Gson();
-        return gson.fromJson(data, Video.class);
-    }
-
-    public String CreateJsonFromVideoArray(List<Video> videos){
+    public String createJsonFromVideoArray(List<Video> videos){
         Gson gson = new Gson();
         return gson.toJson(videos);
     }
 
-    public String CreateInvalidVideoJson(String song, String artist, String publishDate, String property) {
+    public String createInvalidVideoJson(String song, String artist, String publishDate, String property) {
         if (!property.equals("song")
                 && !property.equals("artist")
                 && !property.equals("publishDate")) {
@@ -109,19 +69,56 @@ public class VideoHelpers {
                 "\"publishDate\": " + publishDate;
     }
 
-    public boolean PropertyInVideo(String propertyName, Video video) throws NoSuchFieldException, IllegalAccessException {
-        try{
-            Class<?> c = video.getClass();
-            Field f = c.getDeclaredField(propertyName);
-            f.setAccessible(true);
-            if (f.get(video) != null)
-            {
-                return true;
-            };
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            return false;
+    public void clearOutVideoDatabase() throws IOException {
+        List<Video> videos = getVideoArrayFromApi();
+
+        for (Video video : videos) {
+            Request.Delete(BaseUrl + "/Video/" + video._id)
+                    .execute();
         }
-        return false;
+    }
+
+    public Video buildVideoFromHttpResponse(HttpResponse httpResponse) throws IOException {
+        CommonHelpers commonHelpers = new CommonHelpers();
+        InputStream content = httpResponse.getEntity().getContent();
+        String httpBody = commonHelpers.convertStreamToString(content);
+        return mapHttpBodyToVideo(httpBody);
+    }
+
+    public ArrayList<Video> buildVideoArrayFromHttpResponse(HttpResponse httpResponse) throws IOException {
+        InputStream content = httpResponse.getEntity().getContent();
+        String httpBody = commonHelpers.convertStreamToString(content);
+        return mapHttpBodyStringToVideoArray(httpBody);
+    }
+
+    ArrayList<Video> getVideoArrayFromApi() throws IOException {
+        String data;
+
+        data = Request.Get(BaseUrl + "/Video/")
+                .execute()
+                .returnContent()
+                .asString();
+
+        return mapHttpBodyStringToVideoArray(data);
+    }
+
+    private Video mapHttpBodyToVideo(String data) throws InvalidDataException {
+        if (data == null || data.isEmpty()) {
+            throw new InvalidDataException("No JSON to map");
+        }
+
+        Gson gson = new Gson();
+        return gson.fromJson(data, Video.class);
+    }
+
+    private ArrayList<Video> mapHttpBodyStringToVideoArray(String data) throws InvalidDataException {
+        if (data == null || data.isEmpty()) {
+            throw new InvalidDataException("No Json data to map");
+        }
+
+        Gson gson = new Gson();
+        Type videoListType = new TypeToken<ArrayList<Video>>(){}.getType();
+        return gson.fromJson(data, videoListType);
     }
 }
 

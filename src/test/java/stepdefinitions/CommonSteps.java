@@ -1,15 +1,10 @@
 package stepdefinitions;
 
-import cucumber.api.PendingException;
-import cucumber.api.java.Before;
 import cucumber.api.java.en.*;
 import general.CommonHelpers;
-import general.PlaylistHelpers;
-import general.VideoHelpers;
+import java.io.InputStream;
 import org.apache.http.client.fluent.Request;
 
-import java.io.IOException;
-import java.io.InputStream;
 import static org.junit.Assert.*;
 
 public class CommonSteps {
@@ -20,25 +15,18 @@ public class CommonSteps {
         this.world = world;
     }
 
-    @When("^I make a GET request to \"([^\"]*)\"$")
-    public void i_make_a_GET_request_to(String method) throws Throwable {
-        world.httpResponse = Request.Get(world.baseUrl + method)
-                .execute()
-                .returnResponse();
-    }
-
     @Given("^I'm using the API on url \"([^\"]*)\"$")
-    public void im_using_the_api_on_url(String url) throws Throwable {
+    public void imUsingTheApiOnUrl(String url) throws Throwable {
         world.baseUrl = url;
     }
 
     @And("^The response body should read \"([^\"]*)\"$")
-    public void TheResponseBodyShouldRead(String expectedBodyText) throws Throwable {
+    public void theResponseBodyShouldRead(String expectedBodyText) throws Throwable {
         expectedBodyText += "\n";
         InputStream content = world.httpResponse.getEntity().getContent();
 
         CommonHelpers commonHelpers = new CommonHelpers();
-        String bodyText = commonHelpers.ConvertStreamToString(content);
+        String bodyText = commonHelpers.convertStreamToString(content);
 
         assertEquals(expectedBodyText, bodyText);
     }
@@ -48,14 +36,8 @@ public class CommonSteps {
         InputStream content = world.httpResponse.getEntity().getContent();
 
         CommonHelpers commonHelpers = new CommonHelpers();
-        String httpBody = commonHelpers.ConvertStreamToString(content);
+        String httpBody = commonHelpers.convertStreamToString(content);
         assertEquals("", httpBody);
-    }
-
-    @Then("^The response code should be (\\d+)$")
-    public void the_response_code_should_be(int expectedResponseCode) throws Throwable {
-        int statusCode = world.httpResponse.getStatusLine().getStatusCode();
-        assertEquals(expectedResponseCode , statusCode);
     }
 
     @And("^The response should have no content$")
@@ -63,10 +45,23 @@ public class CommonSteps {
         assertEquals(world.httpResponse.getStatusLine().getReasonPhrase(), "No Content");
     }
 
+    @When("^I make a GET request to \"([^\"]*)\"$")
+    public void iMakeAGetRequestTo(String method) throws Throwable {
+        world.httpResponse = Request.Get(world.baseUrl + method)
+                .execute()
+                .returnResponse();
+    }
+
     @When("^I make a DELETE request to \"([^\"]*)\"$")
-    public void iMakeADELETERequestTo(String method) throws Throwable {
+    public void iMakeADeleteRequestTo(String method) throws Throwable {
         world.httpResponse = Request.Delete(world.baseUrl + method)
                 .execute()
                 .returnResponse();
+    }
+
+    @Then("^The response code should be (\\d+)$")
+    public void theResponseCodeShouldBe(int expectedResponseCode) throws Throwable {
+        int statusCode = world.httpResponse.getStatusLine().getStatusCode();
+        assertEquals(expectedResponseCode , statusCode);
     }
 }

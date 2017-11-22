@@ -6,7 +6,7 @@ import org.hamcrest.core.IsCollectionContaining;
 
 public final class CustomMatchers {
 
-    public static <T> Matcher<Iterable<? super T>> ExactlyNItems(final int numberOfExpectMatches,
+    public static <T> Matcher<Iterable<? super T>> exactlyNItems(final int numberOfExpectMatches,
                                                                  final Matcher<? super T> elementMatcher) {
         return new IsCollectionContaining<T>(elementMatcher) {
             @Override

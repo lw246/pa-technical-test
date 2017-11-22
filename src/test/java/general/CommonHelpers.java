@@ -1,14 +1,13 @@
 package general;
 
+import java.io.*;
+import java.util.Scanner;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
-import java.io.*;
-import java.util.Scanner;
-
 public class CommonHelpers {
 
-    public String ConvertStreamToString(InputStream inputStream) {
+    public String convertStreamToString(InputStream inputStream) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         StringBuilder stringBuilder = new StringBuilder("");
 
@@ -30,7 +29,7 @@ public class CommonHelpers {
         return stringBuilder.toString();
     }
 
-    public String GetTestDataFromResource(String fileName) {
+    public String getTestDataFromResource(String fileName) {
         StringBuilder result = new StringBuilder("");
 
         ClassLoader classLoader = getClass().getClassLoader();
@@ -56,7 +55,7 @@ public class CommonHelpers {
         return result.toString();
     }
 
-    public void AddTestData(String url, String testData) throws IOException {
+    public void addTestData(String url, String testData) throws IOException {
         Request.Post(url)
                 .addHeader("Content-Type", "application/json")
                 .bodyString(testData, ContentType.APPLICATION_JSON)
